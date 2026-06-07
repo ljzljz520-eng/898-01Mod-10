@@ -29,6 +29,10 @@
                     <option value="tech" {{ old('category', $topic->category) == 'tech' ? 'selected' : '' }}>技术交流</option>
                     <option value="study" {{ old('category', $topic->category) == 'study' ? 'selected' : '' }}>学习心得</option>
                     <option value="question" {{ old('category', $topic->category) == 'question' ? 'selected' : '' }}>问题求助</option>
+                    <option value="broadband" {{ old('category', $topic->category) == 'broadband' ? 'selected' : '' }}>宽带办理</option>
+                    <option value="school" {{ old('category', $topic->category) == 'school' ? 'selected' : '' }}>学区材料</option>
+                    <option value="parking" {{ old('category', $topic->category) == 'parking' ? 'selected' : '' }}>停车证</option>
+                    <option value="renovation" {{ old('category', $topic->category) == 'renovation' ? 'selected' : '' }}>装修流程</option>
                 </select>
                 @error('category')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

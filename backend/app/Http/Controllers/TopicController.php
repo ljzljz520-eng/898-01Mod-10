@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TopicRequest;
+use App\Models\KnowledgeCard;
 use App\Models\Topic;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,10 @@ class TopicController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->has('search')) {
+            return $this->searchWithPriority($request);
+        }
+
         $query = Topic::with('user')
             ->where('status', 1)
             ->orderBy('is_pinned', 'desc')
@@ -24,17 +29,84 @@ class TopicController extends Controller
             $query->where('category', $request->category);
         }
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('content', 'like', "%{$search}%");
-            });
-        }
-
         $topics = $query->paginate(20)->appends(request()->query());
 
         return view('topics.index', compact('topics'));
+    }
+
+    protected function searchWithPriority(Request $request)
+    {
+        $search = $request->search;
+        $perPage = 20;
+
+        KnowledgeCard::checkExpiry()->get()->each(function ($card) {
+            $card->updateStatusByExpiry();
+        });
+
+        $cardsQuery = KnowledgeCard::active()
+            ->with(['moderator', 'topic'])
+            ->search($search);
+
+        if ($request->has('category') && $request->category !== 'all') {
+            $cardsQuery->byCategory($request->category);
+        }
+
+        $cards = $cardsQuery->orderBy('created_at', 'desc')
+            ->limit($perPage)
+            ->get();
+
+        $remaining = $perPage - $cards->count();
+        $topics = collect();
+
+        if ($remaining > 0) {
+            $topicsQuery = Topic::with('user')
+                ->where('status', 1)
+                ->whereDoesntHave('knowledgeCard')
+                ->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('content', 'like', "%{$search}%");
+                });
+
+            if ($request->has('category') && $request->category !== 'all') {
+                $topicsQuery->where('category', $request->category);
+            }
+
+            $topics = $topicsQuery->orderBy('is_pinned', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->limit($remaining)
+                ->get();
+        }
+
+        $searchResults = $cards->map(function ($card) {
+            return (object) [
+                'type' => 'knowledge_card',
+                'id' => 'card-' . $card->id,
+                'card' => $card,
+            ];
+        })->merge($topics->map(function ($topic) {
+            return (object) [
+                'type' => 'topic',
+                'id' => 'topic-' . $topic->id,
+                'topic' => $topic,
+            ];
+        }));
+
+        $cardsTotal = KnowledgeCard::active()->search($search)->count();
+        $topicsTotal = Topic::where('status', 1)
+            ->whereDoesntHave('knowledgeCard')
+            ->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
+            })
+            ->count();
+
+        $searchMeta = [
+            'knowledge_cards_count' => $cardsTotal,
+            'topics_count' => $topicsTotal,
+            'total' => $cardsTotal + $topicsTotal,
+        ];
+
+        return view('topics.index', compact('searchResults', 'searchMeta'));
     }
 
     public function show(Topic $topic)

@@ -29,4 +29,14 @@ Route::post('topics/{topic}/replies', [App\Http\Controllers\Api\ReplyController:
 // Replies routes (for update/delete)
 Route::apiResource('replies', App\Http\Controllers\Api\ReplyController::class)->except(['index', 'store']);
 
-// （原 Admin 后台 API 路由已移除）
+// Knowledge cards routes
+Route::get('knowledge-cards/categories', [App\Http\Controllers\Api\KnowledgeCardController::class, 'categories']);
+Route::get('knowledge-cards/active', [App\Http\Controllers\Api\KnowledgeCardController::class, 'active']);
+Route::get('knowledge-cards/search', [App\Http\Controllers\Api\KnowledgeCardController::class, 'searchWithPriority']);
+Route::apiResource('knowledge-cards', App\Http\Controllers\Api\KnowledgeCardController::class)->except(['store', 'update', 'destroy']);
+Route::post('knowledge-cards', [App\Http\Controllers\Api\KnowledgeCardController::class, 'store'])->middleware('auth:sanctum');
+Route::put('knowledge-cards/{knowledgeCard}', [App\Http\Controllers\Api\KnowledgeCardController::class, 'update'])->middleware('auth:sanctum');
+Route::patch('knowledge-cards/{knowledgeCard}', [App\Http\Controllers\Api\KnowledgeCardController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('knowledge-cards/{knowledgeCard}', [App\Http\Controllers\Api\KnowledgeCardController::class, 'destroy'])->middleware('auth:sanctum');
+Route::post('knowledge-cards/{knowledgeCard}/review', [App\Http\Controllers\Api\KnowledgeCardController::class, 'markReviewed'])->middleware('auth:sanctum');
+Route::get('knowledge-cards-review', [App\Http\Controllers\Api\KnowledgeCardController::class, 'needsReviewList'])->middleware('auth:sanctum');

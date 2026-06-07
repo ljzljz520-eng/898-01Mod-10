@@ -23,3 +23,13 @@ __pycache__/
 *.log
 .env
 .env.*
+
+# Laravel runtime artifacts
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitignore
+backend/storage/framework/*
+!backend/storage/framework/.gitignore
+backend/storage/logs/*
+!backend/storage/logs/.gitignore
+backend/storage/*.key
+backend/.phpunit.result.cache

@@ -40,8 +40,18 @@ class User extends Authenticatable
         return $this->hasMany(Reply::class);
     }
 
+    public function knowledgeCards()
+    {
+        return $this->hasMany(KnowledgeCard::class, 'moderator_id');
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function isModerator()
+    {
+        return $this->isAdmin();
     }
 }

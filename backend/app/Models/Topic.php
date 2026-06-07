@@ -37,4 +37,15 @@ class Topic extends Model
     {
         return $this->hasMany(Reply::class);
     }
+
+    public function knowledgeCard()
+    {
+        return $this->hasOne(KnowledgeCard::class);
+    }
+
+    public function scopeEligibleForKnowledgeCard($query)
+    {
+        return $query->whereIn('category', ['broadband', 'school', 'parking', 'renovation'])
+            ->whereDoesntHave('knowledgeCard');
+    }
 }
